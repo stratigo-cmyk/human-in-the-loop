@@ -1,0 +1,807 @@
+<title>Human in the Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;500;700;900&family=Tinos:wght@400;700&display=swap">
+<style>
+/* Layout: fixed 16:9 editorial frame, no page scroll. States: intro -> index (five titles) -> one open section (accordion logic).
+   Tinos 400 coral titles with a subtle tonal shift, Noto Sans Hebrew for reading. Warm charcoal ground. Single dark theme by design. */
+:root{
+  --bg:#1F1B1B;
+  --ink:#EDE9E6;
+  --text:#D8D2CE;
+  --muted:#A79E9A;
+  --rule:#4A4241;
+  --coral:#F8836E;
+  --coral-hi:#FF9E8B;
+  --coral-lo:#DD6651;
+
+  --serif:"Tinos","Liberation Serif","Times New Roman",serif;
+  --sans:"Noto Sans Hebrew","Arial Hebrew","Segoe UI",Arial,sans-serif;
+
+  --pad:clamp(1.25rem,.6rem + 2.4vw,3.5rem);
+  --fs-body:clamp(1rem,min(1.2vw,2.1vh),1.375rem);
+  --fs-small:clamp(.875rem,min(.95vw,1.68vh),1.125rem);
+  --fs-lead:clamp(1.125rem,min(1.45vw,2.55vh),1.75rem);
+  --fs-title-index:clamp(2.25rem,min(4.6vw,8.2vh),6.25rem);
+  --fs-title-panel:clamp(2.25rem,min(4vw,7vh),5.25rem);
+  --fs-statement:clamp(1.5rem,min(2.6vw,4.6vh),3.5rem);
+
+  --ease:cubic-bezier(.22,1,.36,1);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+html{background:var(--bg)}
+body{margin:0;overflow:hidden;background:var(--bg);color:var(--text);font:400 var(--fs-body)/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3,p,ol,ul{margin:0}
+ol,ul{padding:0;list-style:none}
+h1,h2,h3{text-wrap:balance}
+p,li{text-wrap:pretty}
+strong{font-weight:700;color:var(--ink)}
+button{font:inherit;color:inherit}
+[hidden]{display:none!important}
+[lang="en"]{unicode-bidi:isolate}
+span[lang="en"],strong[lang="en"]{white-space:nowrap}
+:focus-visible{outline:1.5px solid var(--ink);outline-offset:4px;border-radius:2px}
+[tabindex="-1"]:focus{outline:none}
+
+/* coral title: Tinos 400 with a quiet top-to-bottom tonal shift, per line */
+.coral{color:var(--coral)}
+@supports (-webkit-background-clip:text) or (background-clip:text){
+  .coral{background:linear-gradient(180deg,var(--coral-hi),var(--coral-lo));-webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-box-decoration-break:clone;box-decoration-break:clone}
+}
+
+/* ---------- Frame ---------- */
+.app{position:relative;height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;padding:var(--pad) var(--pad) 0}
+.stage{position:relative;min-height:0}
+.screen{position:absolute;inset:0;display:grid;min-height:0}
+
+/* ---------- Intro ---------- */
+.intro{place-items:center;align-content:center;gap:clamp(1rem,3.4vh,2.75rem);text-align:center}
+.modmo.modmo-intro{position:static;width:var(--iw,360px);aspect-ratio:10/7;opacity:1;transition:none;margin-block-end:calc(var(--iw,360px) * -.08)}
+.intro-head{display:grid;gap:.5rem;justify-items:center}
+.intro-head h1{font:400 clamp(1.5rem,min(2vw,3.6vh),2.5rem)/1.1 var(--serif)}
+.intro-head p{font:400 var(--fs-lead)/1.4 var(--sans);color:var(--text)}
+
+.loop{position:relative;display:flex;align-items:center;justify-content:space-between;gap:.18em;direction:rtl;
+  font-size:var(--fit,2.05vw);line-height:.92;padding-block-end:.5em;white-space:nowrap;color:var(--coral)}
+.loop > span{display:block}
+.w-human{font:900 1em/.92 var(--sans);background:linear-gradient(180deg,var(--coral-hi),var(--coral-lo));color:var(--bg);padding:.02em .1em .08em}
+.w-step{font:700 1em/.92 var(--sans)}
+.w-ai{font:300 .86em/.92 var(--sans)}
+.arr{font:300 .42em/1 var(--sans);color:var(--muted)}
+.loop::after{content:"";position:absolute;inset-inline:.95em;bottom:0;height:.3em;border:max(1.5px,.035em) solid var(--coral);border-block-start:0}
+.loop::before{content:"";position:absolute;inset-inline-start:calc(.95em - .1em + .0175em);bottom:.3em;width:0;height:0;
+  border-inline:.1em solid transparent;border-block-end:.15em solid var(--coral)}
+
+/* capsule from button.png: ~2.6:1, fully rounded, no outline, no shadow */
+.cta{border:0;background:var(--coral);color:var(--bg);border-radius:999px;min-height:56px;padding:0 1.4em;white-space:nowrap;height:clamp(70px,min(5.6vw,10vh),104px);
+  display:inline-grid;place-items:center;font:500 var(--fs-lead)/1 var(--sans);cursor:pointer;transition:background-color 260ms var(--ease)}
+.cta:hover,.cta:focus-visible{background:#FA9886}
+.cta:active{background:var(--coral-lo)}
+
+/* ---------- Index: the five titles are the navigation ---------- */
+.index{align-content:center;justify-items:start}
+.index-cap{font:400 var(--fs-small)/1.4 var(--sans);color:var(--muted);margin-block-end:clamp(.75rem,2vh,1.5rem)}
+.titles{width:100%;max-width:62rem;border-block-start:1px solid var(--rule)}
+.titles li{border-block-end:1px solid var(--rule)}
+.t-btn{position:relative;isolation:isolate;display:flex;align-items:baseline;gap:.45em;width:calc(100% + 2rem);margin-inline:-1rem;
+  padding:clamp(.35rem,1.2vh,.85rem) 1rem;border:0;cursor:pointer;text-align:start;font:400 var(--fs-title-index)/1.08 var(--serif)}
+.t-btn::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--ink);opacity:0;transition:opacity 220ms var(--ease)}
+.titles .t-btn:hover,.titles .t-btn:focus-visible{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--bg);outline:none}
+.titles .t-btn:hover::before,.titles .t-btn:focus-visible::before{opacity:1}
+.t-num{font-variant-numeric:tabular-nums}
+
+/* ---------- Open section ---------- */
+.panel{grid-template-rows:auto minmax(0,1fr);gap:clamp(1rem,3vh,2.25rem)}
+.panel-head{display:flex;align-items:baseline;gap:.45em;padding-inline-end:12rem;font:400 var(--fs-title-panel)/1.05 var(--serif)}
+.panel-head h2{font:inherit}
+.ctrls{position:absolute;inset-inline-end:-.75rem;top:-.75rem;display:flex;align-items:center;gap:.25rem}
+.ctl{width:64px;height:64px;display:grid;place-items:center;background:none;border:0;cursor:pointer;color:var(--ink);border-radius:4px;
+  transition:opacity 220ms var(--ease)}
+.ctl svg{display:block;overflow:visible}
+.ctl.nav{width:52px}
+.ctl:hover{opacity:.65}
+.ctl:disabled{opacity:.22;cursor:default}
+.body{min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:clamp(1.25rem,2.4vw,3rem);row-gap:clamp(1rem,2.6vh,2rem);
+  align-content:start;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+.col{min-width:0;display:grid;gap:clamp(.6rem,1.4vh,1rem);align-content:start}
+.body h3{font:700 var(--fs-body)/1.4 var(--sans);color:var(--ink)}
+.lead{font:400 var(--fs-lead)/1.55 var(--sans);color:var(--ink)}
+.statement{font:400 var(--fs-statement)/1.18 var(--serif);color:var(--ink)}
+.label{font-weight:700;color:var(--ink)}
+.rule-top{border-block-start:1px solid var(--rule);padding-block-start:clamp(.75rem,2vh,1.25rem)}
+
+.list li{display:flex;gap:.7rem;align-items:baseline;padding-block:.42em;border-block-end:1px solid var(--rule)}
+.list li:first-child{border-block-start:1px solid var(--rule)}
+.struck li{color:var(--muted)}
+.struck li > span{text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:var(--muted)}
+.struck li::before{content:"";flex:none;width:.55rem;border-block-start:1px solid var(--muted);transform:translateY(-.3em)}
+.kept li{color:var(--ink)}
+.kept li::before{content:"";flex:none;width:.5rem;height:.5rem;background:var(--coral);transform:translateY(-.08em)}
+.asks li{color:var(--ink);font-size:var(--fs-lead);line-height:1.35}
+
+.log{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(.9rem,1.6vw,1.75rem)}
+.log li{display:grid;gap:.35rem;align-content:start;border-block-start:1px solid var(--rule);padding-block-start:.7rem}
+.log .n{font:400 clamp(1.75rem,min(2.4vw,4.2vh),3rem)/1 var(--serif)}
+.log .q{font:700 var(--fs-lead)/1.25 var(--sans);color:var(--ink)}
+.log .h{font-size:var(--fs-small);line-height:1.55;color:var(--muted)}
+.copy{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem}
+/* secondary actions share the CTA language: orange capsule, dark label */
+.pill{display:inline-grid;place-items:center;border:0;background:var(--coral);color:var(--bg);border-radius:999px;min-height:48px;padding:0 1.35em;
+  font:500 var(--fs-body)/1 var(--sans);text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color 220ms var(--ease)}
+.pill:hover,.pill:focus-visible{background:#FA9886}
+.pill:active{background:var(--coral-lo)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.btn{border:1px solid var(--rule);background:transparent;color:var(--ink);border-radius:6px;padding:.6rem 1rem;min-height:44px;cursor:pointer;
+  font:500 var(--fs-small)/1 var(--sans);transition:border-color 200ms var(--ease)}
+.btn:hover{border-color:var(--ink)}
+.status{font-size:var(--fs-small);color:var(--muted)}
+.fallback{width:100%;font:400 var(--fs-small)/1.5 var(--sans);color:var(--ink);background:var(--bg);border:1px solid var(--rule);padding:.5rem .6rem;direction:rtl}
+
+.note{border:1px solid var(--rule);border-radius:6px;padding:clamp(.9rem,2vh,1.4rem);display:grid;gap:.75rem;align-content:start}
+.note h3{font:400 clamp(1.25rem,min(1.6vw,2.8vh),1.875rem)/1.15 var(--serif)}
+.note h3 [lang="en"]{display:block}
+.note ul{display:grid;gap:.45rem}
+.note li{position:relative;padding-inline-start:1rem;font-size:var(--fs-small);line-height:1.5}
+.note li::before{content:"";position:absolute;inset-inline-start:0;top:.75em;width:.5rem;border-block-start:1px solid var(--coral)}
+
+.trace{position:relative;display:grid;gap:.15rem;padding-inline-start:1.5rem}
+.trace::before{content:"";position:absolute;inset-inline-start:.4rem;inset-block:.85em .85em;border-inline-start:1px solid var(--rule)}
+.trace li{position:relative;padding-block:.3rem;color:var(--ink)}
+.trace li::before{content:"";position:absolute;inset-inline-start:calc(-1.5rem + .4rem - 6px);top:.95em;width:13px;height:13px;border-radius:50%;
+  background:var(--bg);border:1px solid var(--ink)}
+.trace li:last-child::before{background:var(--coral);border-color:var(--coral)}
+
+/* section compositions (12-col, RTL: column 1 is on the right) */
+@media (min-width:900px){
+  .panel{padding-block-start:90px}
+  .s1 .a{grid-column:1 / span 6}.s1 .b{grid-column:8 / span 5}
+  .s2 .a{grid-column:1 / span 4}.s2 .b{grid-column:5 / span 4}.s2 .c{grid-column:9 / span 4}.s2 .d{grid-column:1 / -1}
+  .s3 .a{grid-column:1 / span 4;grid-row:1 / span 2}.s3 .b{grid-column:5 / -1}.s3 .c{grid-column:5 / -1}
+  .s3 .c .cols{columns:2;column-gap:clamp(1.25rem,2.4vw,3rem)}
+  .s4 .a{grid-column:1 / span 4}.s4 .b{grid-column:5 / span 4}.s4 .c{grid-column:9 / span 4}
+  .s5 .a{grid-column:1 / span 4}.s5 .b{grid-column:5 / span 4}.s5 .c{grid-column:9 / span 4}
+}
+
+/* ---------- Phone pagination (only when a section is taller than its frame) ---------- */
+.pager{display:none}
+@media (max-width:899px){
+  .panel{grid-template-rows:auto minmax(0,1fr) auto}
+  .pager{display:flex;align-items:center;justify-content:space-between;gap:1rem;border-block-start:1px solid var(--rule);
+    padding-block:.75rem calc(.25rem + env(safe-area-inset-bottom,0px))}
+  .pager[hidden]{display:none!important}
+  .pg-btn{min-width:6.5rem;min-height:44px;border:1px solid var(--rule);background:transparent;color:var(--ink);border-radius:6px;padding:.5rem .9rem;
+    font:500 1rem/1 var(--sans);cursor:pointer}
+  .pg-btn:disabled{color:var(--muted);border-color:transparent;cursor:default}
+  .pg-pos{font:400 1.125rem/1 var(--serif);color:var(--coral);font-variant-numeric:tabular-nums}
+  .body > .off{display:none!important}
+}
+
+/* ---------- Modular motion (bottom-left of open chapters) ---------- */
+.modmo{position:absolute;left:0;bottom:0;width:var(--mw,180px);aspect-ratio:10/7;color:var(--coral);pointer-events:none;opacity:0;transition:opacity 360ms var(--ease)}
+.app[data-state="open"] .modmo{opacity:1}
+.modmo svg{display:block;width:100%;height:100%}
+.modmo rect{fill:currentColor}
+
+/* ---------- Footer ---------- */
+.foot{display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;padding-block:clamp(.75rem,2vh,1.25rem) calc(clamp(.9rem,2.4vh,1.6rem) + env(safe-area-inset-bottom,0px))}
+.foot p{font:400 clamp(.75rem,min(.68vw,1.2vh),.875rem)/1.55 var(--sans);color:var(--muted);max-width:52rem}
+.foot .author{color:var(--coral);text-decoration:none;border-block-end:1px solid transparent;transition:border-color 200ms var(--ease)}
+.foot .author:hover,.foot .author:focus-visible{border-block-end-color:var(--coral)}
+.home{flex:none;display:block;padding:0;margin:0;background:none;border:0;cursor:pointer;border-radius:2px}
+.logo{display:block;height:clamp(32.5px,min(2.75vw,4.875vh),52.5px);width:auto}
+
+/* ---------- Narrow screens: same states; open section scrolls inside its own frame ---------- */
+@media (max-width:899px){
+  .body{grid-template-columns:minmax(0,1fr)}
+  .s3 .a,.s3 .b,.s3 .c{grid-row:auto}
+  .log{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .foot{flex-direction:column-reverse;align-items:flex-start;gap:.6rem}
+  .app[data-state="open"] .foot p{display:none}
+  .app[data-state="open"] .foot{padding-block:.5rem calc(.6rem + env(safe-area-inset-bottom,0px))}
+  .ctrls{inset-inline-end:-.9rem;top:-.9rem}
+  .panel-head{padding-inline-end:0;padding-block-start:3.25rem}
+  .modmo:not(.modmo-intro){display:none}
+  :root{--fs-body:1rem;--fs-small:.875rem;--fs-lead:1.125rem;--fs-title-index:clamp(1.75rem,7.4vw,2.75rem);--fs-title-panel:clamp(1.75rem,7vw,2.5rem);--fs-statement:1.5rem}
+}
+@media (max-width:899px) and (max-height:700px){ .intro{gap:1.25rem} }
+
+@media (prefers-reduced-motion:reduce){
+  .t-btn::before,.cta,.ctl,.btn,.pill{transition:none}
+}
+/* Future English (LTR) build */
+[dir="ltr"] .ctl.nav svg{transform:scaleX(-1)}
+</style>
+
+<div class="app" id="app" data-state="intro" lang="he" dir="rtl">
+  <div class="stage">
+
+    <!-- 01 Intro -->
+    <section class="screen intro" id="intro" aria-labelledby="intro-title">
+      <div class="modmo modmo-intro" id="modmo-intro" aria-hidden="true"><svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="intro-head">
+        <h1 id="intro-title" lang="en">Human in the Loop</h1>
+        <p>עקרונות לעבודה אחראית ויצירתית עם <span lang="en">AI</span></p>
+      </div>
+      <p class="loop" id="loop" role="img" aria-label="הלולאה: אתם, AI, בחינה, החלטה, ובחזרה אליכם">
+        <span class="w-human" aria-hidden="true">אתם</span>
+        <span class="arr" aria-hidden="true">←</span>
+        <span class="w-ai coral" aria-hidden="true" lang="en">AI</span>
+        <span class="arr" aria-hidden="true">←</span>
+        <span class="w-step coral" aria-hidden="true">בחינה</span>
+        <span class="arr" aria-hidden="true">←</span>
+        <span class="w-step coral" aria-hidden="true">החלטה</span>
+        <span class="arr" aria-hidden="true">←</span>
+        <span class="w-human" aria-hidden="true">אתם</span>
+      </p>
+      <button class="cta" type="button" id="to-index">לעקרונות העבודה</button>
+    </section>
+
+    <!-- 02 Index -->
+    <section class="screen index" id="index" aria-labelledby="index-cap" hidden>
+      <h2 class="index-cap" id="index-cap" tabindex="-1">עבודה עם בינה מלאכותית בקורסים</h2>
+      <ol class="titles">
+        <li><button class="t-btn coral" type="button" data-open="p1" aria-controls="p1" aria-expanded="false"><span class="t-num">01</span><span>העיקרון</span></button></li>
+        <li><button class="t-btn coral" type="button" data-open="p2" aria-controls="p2" aria-expanded="false"><span class="t-num">02</span><span>איך העבודה נבחנת</span></button></li>
+        <li><button class="t-btn coral" type="button" data-open="p3" aria-controls="p3" aria-expanded="false"><span class="t-num">03</span><span lang="en">Creative Log</span></button></li>
+        <li><button class="t-btn coral" type="button" data-open="p4" aria-controls="p4" aria-expanded="false"><span class="t-num">04</span><span>להסביר ולהגן על העבודה</span></button></li>
+        <li><button class="t-btn coral" type="button" data-open="p5" aria-controls="p5" aria-expanded="false"><span class="t-num">05</span><span>לאורך הקורס ובהגשה</span></button></li>
+      </ol>
+    </section>
+
+    <!-- 03 Sections -->
+    <section class="screen panel s1" id="p1" role="region" aria-labelledby="h1" hidden>
+      <div class="panel-head coral"><span class="t-num">01</span><h2 id="h1" tabindex="-1">העיקרון</h2></div>
+      <div class="body">
+        <div class="col a">
+          <p class="lead">הבינה המלאכותית משנה את הדרך שבה אנחנו חוקרים, חושבים, יוצרים ומעצבים. בקורסים נעבוד איתה לא כתחליף לחשיבה וליצירה, אלא ככלי שמרחיב אותן.</p>
+          <p class="statement rule-top">הבינה יכולה לסייע ולייצר, אבל השיפוט, האחריות והבחירה הסופית נשארים שלכם.</p>
+        </div>
+        <div class="col b">
+          <h3 lang="en">Human in the Loop</h3>
+          <p>אתם מובילים את התהליך: מגדירים כיוון, בוחנים אפשרויות, מקבלים החלטות, בודקים, משנים ומשפרים.</p>
+          <p>תוצר סופי מלוטש אינו מספיק בפני עצמו כדי להעיד על הבנה ושליטה. חשוב לראות גם את הדרך, הבחירות, הדחיות והשינויים, ואת היכולת להסביר את ההחלטות באופן עצמאי.</p>
+        </div>
+      </div>
+      <div class="pager" hidden>
+        <button class="pg-btn" type="button" data-pg="-1">הקודם</button>
+        <span class="pg-pos" aria-live="polite"></span>
+        <button class="pg-btn" type="button" data-pg="1">הבא</button>
+      </div>
+      <div class="ctrls">
+        <button class="ctl nav" type="button" data-step="-1" aria-label="הפרק הקודם"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M8 17h18M18 9l8 8-8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl nav" type="button" data-step="1" aria-label="הפרק הבא"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M26 17H8M16 9l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl x" type="button" data-close aria-label="סגירה"><svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 6l32 32M38 6L6 38" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+      </div>
+    </section>
+
+    <section class="screen panel s2" id="p2" role="region" aria-labelledby="h2" hidden>
+      <div class="panel-head coral"><span class="t-num">02</span><h2 id="h2" tabindex="-1">איך העבודה נבחנת</h2></div>
+      <div class="body">
+        <div class="col a">
+          <p class="lead">השימוש שלכם ב-<span lang="en">AI</span> הוא חלק מתהליך העבודה ולכן ילקח בחשבון בהערכת הפרויקט, לצד מחקר, פיתוח, חשיבה, קבלת החלטות ואיכות התוצר.</p>
+          <p><a class="pill" href="https://onlinelibrary.wiley.com/doi/10.1155/ahci/3869207" target="_blank" rel="noopener noreferrer">חשוב לקריאה<span class="sr"> (נפתח בלשונית חדשה)</span></a></p>
+        </div>
+        <div class="col b">
+          <p class="label">ההערכה אינה מתבססת על:</p>
+          <ul class="list struck">
+            <li><span>כמה כלי <span lang="en">AI</span> השתמשתם בהם</span></li>
+            <li><span>כמה <span lang="en">Prompts</span> כתבתם</span></li>
+            <li><span>עד כמה ה-<span lang="en">Prompt</span> ארוך או מורכב</span></li>
+            <li><span>כמה מהתוצר נוצר אוטומטית</span></li>
+          </ul>
+        </div>
+        <div class="col c">
+          <p class="label">הדגש הוא על:</p>
+          <ul class="list kept">
+            <li>איכות החשיבה ובחירת הכיוון</li>
+            <li>שיקול דעת וקבלת החלטות</li>
+            <li>זיהוי בעיות וחולשות</li>
+            <li>עריכה ושינוי של תוצרים</li>
+            <li>הבנת התהליך</li>
+            <li>היכולת להסביר את העבודה</li>
+            <li>האחריות על התוצאה</li>
+          </ul>
+        </div>
+        <p class="statement d rule-top"><span lang="en">Prompt</span> טוב אינו המטרה. תהליך עבודה, מחקר, הבנה<br>הערכה, שינוי ויצירה הוא מטרה.</p>
+      </div>
+      <div class="pager" hidden>
+        <button class="pg-btn" type="button" data-pg="-1">הקודם</button>
+        <span class="pg-pos" aria-live="polite"></span>
+        <button class="pg-btn" type="button" data-pg="1">הבא</button>
+      </div>
+      <div class="ctrls">
+        <button class="ctl nav" type="button" data-step="-1" aria-label="הפרק הקודם"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M8 17h18M18 9l8 8-8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl nav" type="button" data-step="1" aria-label="הפרק הבא"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M26 17H8M16 9l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl x" type="button" data-close aria-label="סגירה"><svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 6l32 32M38 6L6 38" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+      </div>
+    </section>
+
+    <section class="screen panel s3" id="p3" role="region" aria-labelledby="h3" hidden>
+      <div class="panel-head coral"><span class="t-num">03</span><h2 id="h3" tabindex="-1" lang="en">Creative Log</h2></div>
+      <div class="body">
+        <div class="col a">
+          <p class="lead">במהלך הקורס תנהלו <strong><span lang="en">Creative Log</span> קצר</strong> שמתעד נקודות משמעותיות בעבודה עם <span lang="en">AI</span>.</p>
+          <p>אין צורך לתעד כל <span lang="en">Prompt</span> או כל פעולה. המטרה היא להראות רגעים שבהם חשבתם, בחנתם אפשרויות וקיבלתם החלטות.</p>
+          <h3>מה מתעדים</h3>
+          <p>בכל שבוע או שלב משמעותי בפרויקט תעדו בקצרה:</p>
+          <div class="copy">
+            <button class="pill" type="button" id="copy-btn">העתקת ארבע השאלות</button>
+            <span class="status" id="copy-status" role="status" aria-live="polite"></span>
+            <label for="copy-fallback" class="status" id="fallback-label" hidden>סמנו את הטקסט והעתיקו אותו ידנית:</label>
+            <textarea class="fallback" id="copy-fallback" rows="5" readonly hidden></textarea>
+          </div>
+        </div>
+        <ol class="log b">
+          <li><span class="n coral" aria-hidden="true">1</span><span class="q">מה ניסיתי להשיג?</span><span class="h">מה הייתה המטרה, הבעיה או השאלה?</span></li>
+          <li><span class="n coral" aria-hidden="true">2</span><span class="q">איך השתמשתי ב-<span lang="en">AI</span>?</span><span class="h">באיזה כלי השתמשתי ומה ביקשתי ממנו לעשות?</span></li>
+          <li><span class="n coral" aria-hidden="true">3</span><span class="q">איזו החלטה קיבלתי?</span><span class="h">מה קיבלתי, דחיתי, שיניתי, חיברתי או פיתחתי בעצמי, ולמה?</span></li>
+          <li><span class="n coral" aria-hidden="true">4</span><span class="q">הוכחה אחת מהתהליך</span><span class="h">צילום מסך, <span lang="en">Prompt</span> משמעותי, גרסה שנדחתה, לפני ואחרי, סקיצה או שינוי בתוצר.</span></li>
+        </ol>
+        <div class="col c rule-top">
+          <h3>התיעוד צריך להראות שליטה</h3>
+          <div class="cols">
+            <p class="lead">עצם התיעוד אינו מוכיח <span lang="en">Human in the Loop</span>.</p>
+            <p>אפשר לתעד עשרות <span lang="en">Prompts</span> ועדיין לקבל כמעט ללא מחשבה את מה שהמערכת הציעה. לעומת זאת, היכולת להסביר למה בחרתם כיוון, מה דחיתם, מה שיניתם ומה לא עבד היא עדות משמעותית לשליטה בתהליך.</p>
+          </div>
+        </div>
+      </div>
+      <div class="pager" hidden>
+        <button class="pg-btn" type="button" data-pg="-1">הקודם</button>
+        <span class="pg-pos" aria-live="polite"></span>
+        <button class="pg-btn" type="button" data-pg="1">הבא</button>
+      </div>
+      <div class="ctrls">
+        <button class="ctl nav" type="button" data-step="-1" aria-label="הפרק הקודם"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M8 17h18M18 9l8 8-8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl nav" type="button" data-step="1" aria-label="הפרק הבא"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M26 17H8M16 9l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl x" type="button" data-close aria-label="סגירה"><svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 6l32 32M38 6L6 38" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+      </div>
+    </section>
+
+    <section class="screen panel s4" id="p4" role="region" aria-labelledby="h4" hidden>
+      <div class="panel-head coral"><span class="t-num">04</span><h2 id="h4" tabindex="-1">להסביר ולהגן על העבודה</h2></div>
+      <div class="body">
+        <div class="col a">
+          <p class="lead">כאשר נעשה שימוש ב-<span lang="en">AI</span> למחקר, כתיבה, אסטרטגיה, אפיון, פיתוח רעיון, עיצוב, קוד או תוכן, אתם צריכים להיות<br>מסוגלים להסביר את העבודה שנעשתה ואת ההחלטות שקיבלתם בשימוש במודלים השונים</p>
+        </div>
+        <div class="col b">
+          <h3>במהלך ביקורת</h3>
+          <p>ייתכן שתתבקשו להסביר:</p>
+          <ul class="list asks">
+            <li>מה ביקשתם מהמודל</li>
+            <li>מה התקבל</li>
+            <li>מה בדקתם, שיניתם או דחיתם</li>
+            <li>למה בחרתם בפתרון מסוים</li>
+            <li>מה מתוך התוצאה מבטא את החשיבה שלכם</li>
+            <li>אילו בעיות או חולשות זיהיתם</li>
+            <li>איך הייתם ממשיכים או משנים את העבודה</li>
+          </ul>
+        </div>
+        <aside class="note c" aria-labelledby="h-not">
+          <h3 id="h-not" class="coral">מה לא נחשב <span lang="en">Human in the Loop</span></h3>
+          <ul>
+            <li>הגשת פלט <span lang="en">AI</span> כמעט ללא בדיקה, שינוי או שיקול דעת</li>
+            <li>קבלת הפתרון הראשון ללא בחינת חלופות</li>
+            <li>חוסר יכולת להסביר החלטה משמעותית</li>
+            <li>שימוש ב-"<span lang="en">AI</span> הציע לי" כהצדקה מקצועית</li>
+            <li>הצגת מחקר, נתונים או מקורות שה-<span lang="en">AI</span> המציא כאמיתיים</li>
+            <li>שימוש בטקסט שלא נקרא או לא הובן</li>
+            <li>הצגת ממשק או קוד שאינכם מבינים ברמה הנדרשת לפרויקט</li>
+          </ul>
+        </aside>
+      </div>
+      <div class="pager" hidden>
+        <button class="pg-btn" type="button" data-pg="-1">הקודם</button>
+        <span class="pg-pos" aria-live="polite"></span>
+        <button class="pg-btn" type="button" data-pg="1">הבא</button>
+      </div>
+      <div class="ctrls">
+        <button class="ctl nav" type="button" data-step="-1" aria-label="הפרק הקודם"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M8 17h18M18 9l8 8-8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl nav" type="button" data-step="1" aria-label="הפרק הבא"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M26 17H8M16 9l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl x" type="button" data-close aria-label="סגירה"><svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 6l32 32M38 6L6 38" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+      </div>
+    </section>
+
+    <section class="screen panel s5" id="p5" role="region" aria-labelledby="h5" hidden>
+      <div class="panel-head coral"><span class="t-num">05</span><h2 id="h5" tabindex="-1">לאורך הקורס ובהגשה</h2></div>
+      <div class="body">
+        <div class="col a">
+          <p class="lead">ה-<strong lang="en">Creative Log</strong> מלווה את העבודה לאורך הקורס. הוא נפרד מהתוצר הקריאטיבי ואינו מחליף אותו. מטרתו להראות בקצרה כיצד השתמשתם ב-<span lang="en">AI</span>, אילו החלטות קיבלתם ומה שיניתם לאורך הדרך.</p>
+        </div>
+        <div class="col b">
+          <h3>בהגשה הסופית</h3>
+          <p>ה-<span lang="en">Creative Log</span> יצורף להגשה. במהלך ההצגה תבחרו מספר קטן של רגעים משמעותיים מתוכו, למשל:</p>
+          <ul class="trace">
+            <li>תוצר ראשוני של <span lang="en">AI</span></li>
+            <li>שינוי או החלטה שלכם</li>
+            <li>אפשרות שנדחתה</li>
+            <li>בעיה שזיהיתם</li>
+            <li>התוצאה לאחר ההתערבות שלכם</li>
+          </ul>
+        </div>
+        <div class="col c">
+          <p>במהלך הביקורות ובהגשה תידרשו להסביר החלטות מרכזיות ולהראות שאתם מבינים את התהליך, מכוונים אותו ושולטים בתוצאה.</p>
+          <p class="statement rule-top"><span lang="en">AI</span> יכול לייצר אפשרויות. התפקיד שלכם כיוצרים הוא ליצור כיוון, לבחור, לשפוט, לשנות ולקחת אחריות על התוצאה.</p>
+        </div>
+      </div>
+      <div class="pager" hidden>
+        <button class="pg-btn" type="button" data-pg="-1">הקודם</button>
+        <span class="pg-pos" aria-live="polite"></span>
+        <button class="pg-btn" type="button" data-pg="1">הבא</button>
+      </div>
+      <div class="ctrls">
+        <button class="ctl nav" type="button" data-step="-1" aria-label="הפרק הקודם"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M8 17h18M18 9l8 8-8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl nav" type="button" data-step="1" aria-label="הפרק הבא"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M26 17H8M16 9l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+        <button class="ctl x" type="button" data-close aria-label="סגירה"><svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 6l32 32M38 6L6 38" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke"/></svg></button>
+      </div>
+    </section>
+    <div class="modmo" id="modmo" aria-hidden="true"><svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet"></svg></div>
+  </div>
+
+  <footer class="foot">
+    <p>מסמך זה הוכן על ידי <a class="author" href="mailto:stratigo.design@gmail.com" title="stratigo.design@gmail.com">אדוארדו מיטלמן</a> עבור אוניברסיטת אריאל, מסלול תקשורת דיגיטלית.<br>המסמך נוצר עבור הסטודנטים בקורסים לתואר ראשון ושני. מוזמנים להשתמש בו ללמידה, אך לא להעתיק, לפרסם מחדש או לעשות בו שימוש מסחרי ללא אישור.</p>
+    <button class="home" type="button" id="home" aria-label="חזרה למסך הפתיחה"><svg class="logo" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100.148 55.441"><path fill="#fff" d="M34.15 19.67c0 1.82-.56 3.04-1.66 3.66h-4.8c-1-.57-1.5-1.68-1.5-3.33 0 0 .02-1.83 0-2.12-.03-1.03.8-1.8.8-1.8h-1.47v-2h8.62zm-2.2 1.15v-4.74h-3.52v4.74c0 .34.17.5.5.5h2.48c.36 0 .54-.16.54-.5m-12.98-.46c0 1.36-.56 2.36-1.68 2.98h-5c-.88-.54-1.32-1.45-1.32-2.73V14.1h2.2v6.75c0 .34.18.5.53.5h2.54c.33 0 .5-.16.5-.5V16.1H14.8v-2.02h4.16zm5-.88h-2.22v-3.4H20.4v-2h3.57zm26.38 1.86c.52-.56.78-1.16.78-1.8V16.1c0-.93-.37-1.6-1.1-2.02h-5.7v2h5.37c-.53.57-.8 1.16-.8 1.8v3.46h-4.57v2H52v-2zm-8.78-7.26h-5.93v2h5.76c-.52.56-.8 1.16-.8 1.8v5.46h2.22v-6.58c0-1.23-.42-2.12-1.25-2.68M56.2 19.48H54v-3.4h-1.36v-2h3.57zm5.57 1.64c0 .98-.36 1.72-1.1 2.22h-3.36v-2h1.9c.22 0 .33-.13.33-.37V16.1h-1.5v-2.02h3.74zM.82 14.08v2h1.35c-.45.8-.68 1.43-.68 1.86v3.4H0v2h2.64c.72-.5 1.08-1.25 1.08-2.22V16.1H6.9v7.24h2.2v-9.26zm65.95 9.26h-2.22v-7.26H63.2v-2h3.57z"/><path fill="#00abb7" d="M43.55 29.7c0 .96-.2 1.82-.58 2.57L40.1 37.9l-1.9-.93 3.5-6.66h-5.73v-5.06h2.2v3.06h5.4zm10.3 6.82l-1.67 1.4-5-5.78v5.42h-2.22V34.7c0-.52.2-1.17.6-1.94.1-.22.42-.7.93-1.46l-1.77-2 1.68-1.43 4.6 5.36V28.3h2.24v2.36c0 .58-.2 1.22-.55 1.9-.07.12-.4.6-.97 1.47zm4.34-2.82h-2.23v-3.4h-1.35v-2h3.57zm19.15 2.82l-1.66 1.4-5-5.78v5.42h-2.23V34.7c0-.53.2-1.17.6-1.94.1-.22.42-.7.93-1.46l-1.76-2.02 1.68-1.4 4.6 5.35V28.3h2.23v2.35c0 .6-.2 1.23-.55 1.92-.05.1-.37.6-.96 1.45z"/><path fill="#fff" d="M77.35 22.3l-1.66 1.4-5-5.78v5.42h-2.23v-2.87c0-.52.2-1.16.6-1.93.1-.22.42-.7.93-1.46l-1.76-2.02 1.68-1.4 4.6 5.35V14.1h2.23v2.35c0 .6-.2 1.23-.55 1.92-.05.1-.37.6-.96 1.45zM26.9 55.44h-2.22V44.1h-1.35v-2h3.57zm5-4.08h-2.22V44.1h-1.35v-2h3.57zm23.73 0H53.4V44.1h-1.34v-2h3.57zm12.48-3.52c0 1.46-.6 2.63-1.8 3.5h-7.2c-1.1-.7-1.64-1.86-1.64-3.5V42.1h2.2v6.74c0 .34.18.5.54.5h1.47V42.1h2.2v7.25h1.5c.34 0 .5-.17.5-.5v-6.76h2.24z"/><path fill="#00abb7" d="M65.52 28.3H59.6v2h5.75c-.53.57-.8 1.16-.8 1.8v5.46h2.2V31c0-1.24-.4-2.14-1.23-2.7"/><path fill="#fff" d="M39.3 42.1h-5.93v2h5.76c-.53.56-.8 1.15-.8 1.8v5.45h2.2v-6.57c0-1.23-.4-2.13-1.23-2.7M82.7 0h-5.95l17.43 23.34h5.97zm17.45 0h-6.87l6.87 9.18zM75.63 49.35c.53-.56.8-1.16.8-1.8v-3.43c0-.94-.38-1.6-1.13-2.02h-5.68v2h5.36c-.52.56-.78 1.16-.78 1.8v3.45h-4.6v2h7.7v-2zM49.2 42.1H42v2h1.4c-.52.65-.8 1.3-.8 1.97v5.3h2.24V44.1h4.34c-.52.56-.8 1.16-.8 1.8v3.45h-2.05v2h4.28V44.8c0-1.3-.48-2.2-1.44-2.69"/></svg></button>
+  </footer>
+</div>
+
+<script>
+/* Modular motion: one fixed pool of rounded modules that keeps reorganising into small scenes
+   (after modular_motion_animation_prompt_design_courses). Artboard 1000x700. Each scene has pose A
+   (resolved form) and an optional pose B (micro-motion); every module is mapped from scene to scene,
+   so forms morph instead of fading. Time-based rAF loop, paused whenever no chapter is open. */
+(function(){
+  var N = 30, H = 36;
+  function m(x, y, w, h){ return [x, y, w, h || H]; }
+  function sq(x, y, s){ return [x, y, s || 40, s || 40]; }
+  function v(x, y, h){ return [x, y, 36, h]; }
+
+  var S = [
+    { name:'horse', thread:true,
+      A:[m(690,110,44),m(640,156,96),m(600,202,112),m(744,202,92),m(330,248,70),m(556,248,176),m(180,294,96),m(300,294,286),m(620,294,124),
+         m(250,340,330),m(600,340,112),m(300,386,290),m(300,432,60),m(520,432,72),m(640,432,62),m(282,478,40),m(360,478,40),m(540,478,40),m(682,478,40),
+         m(262,524,40),m(382,524,40),m(560,524,40),m(702,524,40),m(240,570,54),m(700,570,54)],
+      B:[m(690,104,44),m(640,150,96),m(600,196,112),m(744,196,92),m(330,248,70),m(556,248,176),m(170,294,106),m(300,294,286),m(620,294,124),
+         m(250,340,330),m(600,340,112),m(300,386,290),m(310,432,60),m(500,432,72),m(650,432,62),m(252,478,40),m(400,478,40),m(600,478,40),m(722,478,40),
+         m(212,524,40),m(432,524,40),m(642,524,40),m(762,524,40),m(176,570,54),m(790,570,54)] },
+    { name:'runner',
+      A:[sq(470,104,56),m(400,180,170),m(560,226,120),m(300,226,110),m(420,272,120),sq(690,272,40),sq(260,272,40),m(400,318,110),m(380,364,150),
+         m(520,410,110),m(330,410,80),m(610,456,40),m(290,456,60),m(620,502,40),m(240,502,60),m(620,548,82),m(190,548,72)],
+      B:[sq(478,100,56),m(400,180,170),m(520,226,90),m(340,226,90),m(420,272,120),sq(620,272,40),sq(300,272,40),m(400,318,110),m(380,364,150),
+         m(480,410,90),m(360,410,90),m(560,456,40),m(330,456,40),m(580,502,40),m(300,502,40),m(580,548,72),m(260,548,72)] },
+    { name:'mouse', thread:true,
+      A:[m(450,300,100),m(420,346,160),m(410,392,180),m(410,438,180),m(420,484,160),m(450,530,100),v(492,322,40),sq(660,236,30),v(660,266,62),
+         m(250,438,80),m(196,438,30),m(250,392,40)],
+      B:[m(510,300,100),m(480,346,160),m(470,392,180),m(470,438,180),m(480,484,160),m(510,530,100),v(552,332,30),sq(700,250,30),v(700,280,62),
+         m(270,438,140),m(220,438,30),m(250,392,90)] },
+    { name:'code',
+      A:[m(260,150,220),m(500,150,240),m(260,520,300),m(580,520,160),v(250,196,140),v(250,350,150),v(714,196,130),v(714,340,160),
+         m(320,220,180),m(320,266,120),m(360,312,220),m(360,358,140),m(320,404,260),m(320,450,90),[430,450,22,H],m(450,566,100),m(410,612,180)],
+      B:[m(260,150,220),m(500,150,240),m(260,520,300),m(580,520,160),v(250,196,140),v(250,350,150),v(714,196,130),v(714,340,160),
+         m(320,220,220),m(320,266,90),m(360,312,180),m(400,358,160),m(320,404,200),m(320,450,150),[490,450,22,H],m(450,566,100),m(410,612,180)] },
+    { name:'hand', thread:true,
+      A:[m(470,330,170),m(460,376,190),m(470,422,180),m(490,468,150),m(510,514,110),m(520,560,90),v(470,170,140),v(520,140,170),v(570,150,160),v(620,180,130),m(372,300,96)],
+      B:[m(474,330,170),m(462,376,190),m(470,422,180),m(490,468,150),m(510,514,110),m(520,560,90),v(500,176,140),v(552,146,170),v(604,156,160),v(656,188,130),m(380,296,96)] },
+    { name:'face',
+      A:[sq(410,256,50),sq(560,256,50),m(410,430,210),m(372,400,40),m(616,400,40),m(330,140,150),m(530,140,150),v(250,230,160),v(744,230,160),m(380,560,250),m(400,206,70),m(550,206,70)],
+      B:[[400,272,70,12],[550,272,70,12],m(420,446,190),m(372,404,48),m(608,404,48),m(330,140,150),m(530,140,150),v(250,230,160),v(744,230,160),m(380,560,250),m(400,196,70),m(550,196,70)] },
+    { name:'cloud', thread:true,
+      A:[m(300,460,180),m(240,506,320),m(280,552,260),m(420,414,120),m(450,350,60),m(500,300,60),m(560,262,80),m(650,240,90),m(750,262,80),m(820,300,60),m(860,350,60),m(880,400,50)],
+      B:[m(320,460,180),m(260,506,320),m(300,552,260),m(440,414,120),m(452,340,60),m(502,290,60),m(562,252,80),m(652,230,90),m(752,252,80),m(822,290,60),m(862,340,60),m(882,390,50)] },
+    { name:'sun',
+      A:[m(450,300,100),m(430,346,140),m(450,392,100),v(482,176,90),v(482,464,90),m(270,346,120),m(610,346,120),sq(340,214,40),sq(620,214,40),sq(340,478,40),sq(620,478,40)],
+      B:[m(448,300,104),m(428,346,144),m(448,392,104),v(482,146,110),v(482,474,110),m(230,346,140),m(630,346,140),sq(326,200,40),sq(634,200,40),sq(326,492,40),sq(634,492,40)] },
+    { name:'dancer', thread:true,
+      A:[sq(560,116,56),m(470,196,70),m(640,186,80),m(540,234,100),m(530,280,110),m(540,326,90),m(510,372,150),m(450,418,90),m(612,418,100),m(410,464,60),m(690,464,60),m(380,510,60),m(722,510,52),m(336,556,72),sq(424,150,36)],
+      B:[sq(574,124,56),m(430,230,90),m(650,150,70),m(550,234,100),m(540,280,110),m(548,326,90),m(520,372,150),m(500,418,80),m(620,418,90),m(520,464,50),m(700,464,60),m(530,510,50),m(740,510,52),m(520,556,72),sq(704,110,36)] },
+    { name:'pen',
+      A:[m(300,250,120),m(310,296,100),m(330,342,60),v(342,388,60),sq(520,480,40),sq(820,260,40),m(560,480,150),m(580,436,70),m(646,396,60),m(700,352,60),m(744,312,60),m(784,276,40)],
+      B:[m(300,250,120),m(310,296,100),m(330,342,60),v(342,388,60),sq(520,480,40),sq(820,260,40),m(560,480,200),m(590,430,70),m(660,384,60),m(716,338,60),m(760,300,60),m(796,270,40)] },
+    { name:'grid',
+      A:[m(250,190,500),m(250,250,150),m(425,250,150),m(600,250,150),m(250,296,150),m(425,296,150),m(600,296,150),m(250,342,150),m(425,342,150),m(600,342,150),m(250,404,500)],
+      B:[m(420,150,160),m(420,196,160),m(420,242,160),m(420,288,160),m(420,334,160),m(420,380,160),m(420,426,160),m(420,472,160),m(420,518,160),m(420,564,160),m(420,616,160)] },
+    { name:'aperture', thread:true,
+      A:[m(420,170,160),m(600,212,90),v(690,290,120),m(600,470,90),m(420,512,160),m(310,470,90),v(274,290,120),m(310,212,90),sq(480,330,40),m(520,330,40)],
+      B:[m(440,230,120),m(560,262,70),v(616,310,80),m(560,430,70),m(440,452,120),m(370,430,70),v(348,310,80),m(370,262,70),sq(486,336,28),m(514,336,28)] },
+    { name:'nodes',
+      A:[sq(300,200),sq(460,160),sq(640,220),sq(260,380),sq(420,330),sq(580,400),sq(720,360),sq(360,520),sq(560,540),sq(700,500),m(340,214,100),m(480,344,90),m(600,414,110),sq(300,200,24)],
+      B:[sq(300,220),sq(480,220),sq(660,220),sq(300,360),sq(480,360),sq(660,360),sq(300,500),sq(480,500),sq(660,500),sq(660,500),m(340,234,130),m(520,374,130),m(520,514,130),sq(652,222,24)] },
+    { name:'spark',
+      A:[m(450,180,100),m(410,226,180),m(400,272,200),m(410,318,180),m(440,364,120),m(460,410,80),m(460,456,80),m(476,502,48),m(300,240,70),m(630,240,70),sq(330,150,40),sq(630,150,40),v(482,90,60),sq(485,280,30)],
+      B:[m(450,180,100),m(410,226,180),m(400,272,200),m(410,318,180),m(440,364,120),m(460,410,80),m(460,456,80),m(476,502,48),m(240,240,90),m(670,240,90),sq(300,120,40),sq(660,120,40),v(482,40,80),sq(485,280,30)] }
+  ];
+
+  var TRANS = 760, HOLD = 2040, SCENE = TRANS + HOLD;   // 14 scenes x 2.8 s = 39.2 s loop
+
+  function centroid(p){ var x=0,y=0; p.forEach(function(r){ x+=r[0]+r[2]/2; y+=r[1]+r[3]/2; }); return [x/p.length, y/p.length]; }
+  function full(pose){ // pad every pose to N modules: extras park, shrunk and transparent, at the form's centre
+    var c = centroid(pose), out = [];
+    for (var i=0;i<N;i++){ var r = pose[i]; out.push(r ? [r[0],r[1],r[2],r[3],1] : [c[0]-10,c[1]-10,20,20,0]); }
+    return out;
+  }
+  S.forEach(function(s){ s.A = full(s.A); s.B = full(s.B || s.A); });
+
+  var easeIO = function(t){ return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; };
+  var easeS  = function(t){ return .5-.5*Math.cos(Math.PI*t); };
+  function lerp(a,b,t){ return a+(b-a)*t; }
+  function mix(a,b,t){ return [lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t),lerp(a[3],b[3],t),lerp(a[4],b[4],t)]; }
+  function band(r,i){ return [r[0]-40, 230 + (i%4)*80, r[2]+80, H, r[4]>0?1:0]; } // horizontal thread state
+
+  var sets = [], acc = 0, last = 0, raf = 0, running = false;   // one rect pool per host, same frame
+
+  function frame(t){ // t: ms into the loop
+    var k = Math.floor(t / SCENE) % S.length, local = t % SCENE;
+    var prev = S[(k + S.length - 1) % S.length], cur = S[k];
+    for (var i=0;i<N;i++){
+      var r;
+      if (local < TRANS){
+        var d = (i % 7) * 22, p = Math.min(1, Math.max(0, (local - d) / (TRANS - 154))), e = easeIO(p);
+        if (prev.thread){ // lateral thread: align into bands, then redistribute
+          var mid = band(mix(prev.A[i], cur.A[i], .5), i);
+          r = e < .5 ? mix(prev.A[i], mid, e*2) : mix(mid, cur.A[i], (e-.5)*2);
+        } else r = mix(prev.A[i], cur.A[i], e);
+      } else {
+        var q = (local - TRANS) / HOLD;                       // micro-motion: A -> B -> A -> B -> A, smooth
+        r = mix(cur.A[i], cur.B[i], (1 - Math.cos(Math.PI * 4 * q)) / 2);
+      }
+      var w = Math.max(0, r[2]), h = Math.max(0, r[3]);
+      for (var s2=0;s2<sets.length;s2++){ var el = sets[s2][i];
+        el.setAttribute('x', r[0].toFixed(1)); el.setAttribute('y', r[1].toFixed(1));
+        el.setAttribute('width', w.toFixed(1)); el.setAttribute('height', h.toFixed(1));
+        el.setAttribute('rx', (Math.min(w, h) * .38).toFixed(1));
+        el.setAttribute('opacity', r[4].toFixed(2)); }
+    }
+  }
+  function tick(now){
+    if (!running) return;
+    var dt = Math.min(50, now - (last || now)); last = now; acc += dt;
+    frame(acc % (SCENE * S.length));
+    raf = requestAnimationFrame(tick);
+  }
+  function staticPose(){ // reduced motion: the resolved final scene, no movement
+    var p = S[S.length-1].A;
+    sets.forEach(function(rects){ for (var i=0;i<N;i++){ var r=p[i], el=rects[i];
+      el.setAttribute('x',r[0]); el.setAttribute('y',r[1]); el.setAttribute('width',r[2]); el.setAttribute('height',r[3]);
+      el.setAttribute('rx',(Math.min(r[2],r[3])*.38).toFixed(1)); el.setAttribute('opacity',r[4]); } });
+  }
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  window.HITLMotion = {
+    init: function(){
+      ['modmo','modmo-intro'].forEach(function(id){
+        var host = document.getElementById(id); if (!host) return;
+        var svg = host.querySelector('svg'), rects = [];
+        for (var i=0;i<N;i++){ var r = document.createElementNS('http://www.w3.org/2000/svg','rect'); svg.appendChild(r); rects.push(r); }
+        sets.push(rects);
+      });
+      frame(TRANS + 1); // resolved first scene at rest
+      if (reduce.matches) staticPose();
+    },
+    play: function(){
+      if (reduce.matches){ staticPose(); return; }
+      if (running) return; running = true; last = 0; raf = requestAnimationFrame(tick);
+    },
+    pause: function(){ running = false; cancelAnimationFrame(raf); },
+    // size it to the free corner under the left-most column so it never covers copy
+    place: function(panel){
+      var host = document.getElementById('modmo'); if (!host || !panel) return;
+      var stage = host.parentNode.getBoundingClientRect();
+      var w = Math.max(150, Math.min(280, window.innerWidth * .14)), hgt = w * .7;
+      var lowest = stage.top;
+      var edge = stage.left + w + 24, rg = document.createRange();
+      // text: measure the actual line boxes (RTL lines end short of the left edge); boxes: measure the element
+      Array.prototype.forEach.call(panel.querySelectorAll('.body p, .body li, .body h3'), function(el){
+        rg.selectNodeContents(el);
+        Array.prototype.forEach.call(rg.getClientRects(), function(b){ if (b.width && b.left < edge) lowest = Math.max(lowest, b.bottom); });
+      });
+      Array.prototype.forEach.call(panel.querySelectorAll('.body .note, .body .pill, .body .list li'), function(el){
+        var b = el.getBoundingClientRect();
+        if (b.width && b.left < edge) lowest = Math.max(lowest, b.bottom);
+      });
+      var free = stage.bottom - lowest - 20;
+      if (free < hgt){ hgt = Math.max(60, free); w = hgt / .7; }
+      host.style.setProperty('--mw', Math.round(w) + 'px');
+      host.dataset.free = Math.round(free);
+      this.base = Math.max(150, Math.min(280, window.innerWidth * .14));
+    },
+    // intro: 2x the chapter animation's default size, capped so the intro still fits the frame
+    sizeIntro: function(){
+      var host = document.getElementById('modmo-intro'); if (!host) return;
+      var base = Math.max(150, Math.min(280, window.innerWidth * .14));
+      var stageH = host.closest('.stage').getBoundingClientRect().height;
+      var narrow = window.innerWidth < 900;
+      var w = narrow ? Math.min(window.innerWidth * .82, 2 * base) : 2 * base;
+      var maxW = (stageH * .44) / .7;            // leave room for heading, loop and button
+      host.style.setProperty('--iw', Math.round(Math.min(w, maxW)) + 'px');
+    }
+  };
+  document.addEventListener('visibilitychange', function(){
+    var st = document.getElementById('app').getAttribute('data-state');
+    if (document.hidden) window.HITLMotion.pause();
+    else if (st === 'open' || st === 'intro') window.HITLMotion.play();
+  });
+})();
+</script>
+<script>
+(function(){
+  var root = document.documentElement;
+  root.lang = 'he'; root.dir = 'rtl';
+  var app = document.getElementById('app');
+  HITLMotion.init();
+  HITLMotion.sizeIntro();
+  HITLMotion.play();
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+  var current = document.getElementById('intro');
+  var lastTrigger = null;
+
+  // Fit the loop artwork: about 30% of the reference size on 16:9 desktop, wider on narrow screens
+  var loop = document.getElementById('loop');
+  function fit(){
+    var vw = window.innerWidth;
+    var target = vw >= 900 ? vw * 0.294 : Math.min(vw * 0.9, 560);
+    loop.style.setProperty('--fit', '100px');
+    loop.style.width = 'max-content';
+    var w = loop.getBoundingClientRect().width;
+    loop.style.width = '';
+    if (w) loop.style.setProperty('--fit', (100 * target / w) + 'px');
+  }
+  fit();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(fit, 120); });
+
+  function show(next, state, focusEl){
+    if (next === current) return;
+    var prev = current;
+    current = next;
+    app.setAttribute('data-state', state);
+    var done = function(){
+      prev.hidden = true;
+      next.hidden = false;
+      if (next.classList.contains('panel')){ paginate(next); HITLMotion.place(next); HITLMotion.play(); }
+      else if (state === 'intro'){ HITLMotion.sizeIntro(); HITLMotion.play(); }
+      else HITLMotion.pause();
+      if (!reduce.matches && next.animate){
+        next.animate([{opacity:0, transform:'translateY(8px)'},{opacity:1, transform:'none'}], {duration:320, easing:EASE});
+      }
+      if (focusEl) focusEl.focus({preventScroll:true});
+    };
+    if (!reduce.matches && prev.animate){
+      var a = prev.animate([{opacity:1, transform:'none'},{opacity:0, transform:'translateY(-6px)'}], {duration:200, easing:EASE});
+      a.onfinish = done;
+    } else { done(); }
+  }
+
+  var index = document.getElementById('index');
+  var titleBtns = Array.prototype.slice.call(document.querySelectorAll('[data-open]'));
+
+  // Ariel logo: back to the opening screen from anywhere
+  document.getElementById('home').addEventListener('click', function(){
+    titleBtns.forEach(function(b){ b.setAttribute('aria-expanded', 'false'); });
+    lastTrigger = null;
+    show(document.getElementById('intro'), 'intro', document.getElementById('to-index'));
+  });
+
+  document.getElementById('to-index').addEventListener('click', function(){
+    show(index, 'index', titleBtns[0]);
+  });
+
+  // Phone: split a section into pages when it is taller than its frame
+  var narrow = window.matchMedia('(max-width: 899px)');
+  function paginate(panel){
+    var body = panel.querySelector('.body');
+    var pager = panel.querySelector('.pager');
+    var kids = Array.prototype.slice.call(body.children);
+    kids.forEach(function(k){ k.classList.remove('off'); delete k.dataset.page; });
+    panel.dataset.pages = '1'; panel.dataset.page = '0';
+    if (!narrow.matches){ pager.hidden = true; return; }
+    pager.hidden = true;                        // fits without paging? keep it whole
+    if (body.scrollHeight <= body.clientHeight + 1) return;
+    pager.hidden = false;                       // otherwise measure with the pager in place
+    var avail = body.clientHeight;
+    var gap = parseFloat(getComputedStyle(body).rowGap) || 0;
+    var page = 0, used = 0;
+    var heights = kids.map(function(k){ return k.getBoundingClientRect().height; });
+    kids.forEach(function(k, i){
+      var h = heights[i];
+      if (used > 0 && used + gap + h > avail){ page++; used = 0; }
+      used += (used > 0 ? gap : 0) + h;
+      k.dataset.page = page;
+    });
+    panel.dataset.pages = String(page + 1);
+    goPage(panel, 0, false);
+  }
+  function goPage(panel, n, animate){
+    var total = +panel.dataset.pages || 1;
+    n = Math.max(0, Math.min(total - 1, n));
+    panel.dataset.page = String(n);
+    var body = panel.querySelector('.body');
+    Array.prototype.forEach.call(body.children, function(k){ k.classList.toggle('off', +k.dataset.page !== n); });
+    body.scrollTop = 0;
+    var pager = panel.querySelector('.pager');
+    pager.querySelector('[data-pg="-1"]').disabled = n === 0;
+    pager.querySelector('[data-pg="1"]').disabled = n === total - 1;
+    pager.querySelector('.pg-pos').textContent = 'עמוד ' + (n + 1) + ' מתוך ' + total;
+    if (animate && !reduce.matches && body.animate){
+      body.animate([{opacity:0, transform:'translateY(8px)'},{opacity:1, transform:'none'}], {duration:280, easing:EASE});
+    }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.pager'), function(pg){
+    pg.addEventListener('click', function(e){
+      var b = e.target.closest('[data-pg]'); if (!b || b.disabled) return;
+      var panel = pg.closest('.panel');
+      goPage(panel, (+panel.dataset.page || 0) + (+b.getAttribute('data-pg')), true);
+    });
+  });
+  var pt; window.addEventListener('resize', function(){
+    clearTimeout(pt);
+    pt = setTimeout(function(){ HITLMotion.sizeIntro(); if (current.classList.contains('panel')){ paginate(current); HITLMotion.place(current); } }, 150);
+  });
+
+  function openPart(id, trigger){
+    var panel = document.getElementById(id);
+    titleBtns.forEach(function(b){ b.setAttribute('aria-expanded', b.getAttribute('data-open') === id ? 'true' : 'false'); });
+    lastTrigger = trigger || null;
+    show(panel, 'open', panel.querySelector('h2'));
+  }
+  function closePart(){
+    titleBtns.forEach(function(b){ b.setAttribute('aria-expanded', 'false'); });
+    show(index, 'index', lastTrigger || titleBtns[0]);
+  }
+  titleBtns.forEach(function(b){
+    b.addEventListener('click', function(){ openPart(b.getAttribute('data-open'), b); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function(x){
+    x.addEventListener('click', closePart);
+  });
+  // previous / next chapter, in place (no loop from 05 to 01)
+  var order = ['p1','p2','p3','p4','p5'];
+  Array.prototype.forEach.call(document.querySelectorAll('.panel'), function(panel){
+    var i = order.indexOf(panel.id);
+    var prevB = panel.querySelector('[data-step="-1"]'), nextB = panel.querySelector('[data-step="1"]');
+    prevB.disabled = i === 0; nextB.disabled = i === order.length - 1;
+    [prevB, nextB].forEach(function(b){
+      b.addEventListener('click', function(){
+        var j = i + (+b.getAttribute('data-step'));
+        if (j < 0 || j >= order.length) return;
+        var target = document.getElementById(order[j]);
+        titleBtns.forEach(function(t){ t.setAttribute('aria-expanded', t.getAttribute('data-open') === order[j] ? 'true' : 'false'); });
+        lastTrigger = document.querySelector('[data-open="' + order[j] + '"]');
+        show(target, 'open', target.querySelector('[data-step="' + b.getAttribute('data-step') + '"]:not(:disabled)') || target.querySelector('h2'));
+      });
+    });
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && app.getAttribute('data-state') === 'open') closePart();
+  });
+
+  // Deep link: #p1 ... #p5 opens that section directly
+  var h = (location.hash || '').slice(1);
+  if (/^p[1-5]$/.test(h)){
+    document.getElementById('intro').hidden = true;
+    current = document.getElementById(h);
+    current.hidden = false;
+    app.setAttribute('data-state', 'open');
+    paginate(current);
+    HITLMotion.place(current); HITLMotion.play();
+    lastTrigger = document.querySelector('[data-open="' + h + '"]');
+  }
+
+  // Copy the four Creative Log questions
+  var copyBtn = document.getElementById('copy-btn');
+  var status = document.getElementById('copy-status');
+  var fb = document.getElementById('copy-fallback');
+  var fbLabel = document.getElementById('fallback-label');
+  var template = 'Creative Log\n1. מה ניסיתי להשיג?\n2. איך השתמשתי ב-AI?\n3. איזו החלטה קיבלתי?\n4. הוכחה אחת מהתהליך\n';
+  var timer;
+  function say(msg){ status.textContent = msg; clearTimeout(timer); timer = setTimeout(function(){ status.textContent = ''; }, 4000); }
+  function fallback(){ fb.value = template; fb.hidden = false; fbLabel.hidden = false; fb.focus(); fb.select(); }
+  copyBtn.addEventListener('click', function(){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(template).then(function(){ say('ארבע השאלות הועתקו'); }, fallback);
+    } else { fallback(); }
+  });
+})();
+</script>
