@@ -214,6 +214,27 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
 }
 /* Future English (LTR) build */
 [dir="ltr"] .ctl.nav svg{transform:scaleX(-1)}
+
+/* ---------- Contact form ---------- */
+.contact-form{padding:clamp(1.5rem,4vh,3rem);display:flex;align-items:flex-start;justify-content:center}
+.contact-form form{width:100%;max-width:45rem;display:grid;gap:clamp(1.5rem,3vh,2.5rem)}
+.form-group{display:grid;gap:.75rem}
+.form-group label{font:500 var(--fs-body) var(--sans);color:var(--ink);display:block}
+.form-group input,.form-group textarea{
+  background:transparent;
+  border:none;
+  border-block-end:1px solid var(--ink);
+  color:var(--ink);
+  font:400 var(--fs-body) var(--sans);
+  padding:0.5rem 0;
+  outline:none;
+  transition:border-color 200ms var(--ease);
+  direction:rtl;
+  text-align:right
+}
+.form-group input:focus,.form-group textarea:focus{border-block-end-color:var(--coral)}
+.form-group textarea{resize:vertical;min-height:120px}
+.coral-btn{align-self:flex-start}
 </style>
 
 <div class="app" id="app" data-state="intro" lang="he" dir="rtl">
@@ -439,6 +460,27 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
       </div>
     </section>
     <div class="modmo" id="modmo" aria-hidden="true"><svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet"></svg></div>
+
+    <!-- Questions form -->
+    <section class="panel" id="contact" hidden>
+      <div class="panel-head">
+        <h2 class="coral">שאלות למנחה</h2>
+      </div>
+      <div class="contact-form">
+        <form id="contact-form" onsubmit="return sendQuestion(event)">
+          <div class="form-group">
+            <label for="student-name">שם הסטודנט/ית</label>
+            <input type="text" id="student-name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="student-question">השאלה שלך</label>
+            <textarea id="student-question" name="message" required rows="4"></textarea>
+          </div>
+          <button type="submit" class="cta coral-btn">שלח שאלה</button>
+        </form>
+        <div id="form-status" style="display:none;margin-top:1rem;color:var(--coral);font-size:var(--fs-body)"></div>
+      </div>
+    </section>
   </div>
 
   <footer class="foot">
@@ -804,4 +846,34 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
     } else { fallback(); }
   });
 })();
+
+// Contact form handler
+function sendQuestion(e){
+  e.preventDefault();
+  var form = document.getElementById('contact-form');
+  var name = document.getElementById('student-name').value;
+  var message = document.getElementById('student-question').value;
+  var status = document.getElementById('form-status');
+
+  // Create mailto link with form data
+  var subject = encodeURIComponent('שאלה מהסטודנט/ית: ' + name);
+  var body = encodeURIComponent('שם: ' + name + '\n\nשאלה:\n' + message);
+  var mailtoLink = 'mailto:stratigo.design@gmail.com?subject=' + subject + '&body=' + body;
+
+  // Show success message and reset form
+  status.textContent = 'הודעתך תשלח בתוך רגע...';
+  status.style.display = 'block';
+
+  // Open mailto
+  window.location.href = mailtoLink;
+
+  // Reset form after a short delay
+  setTimeout(function(){
+    form.reset();
+    status.textContent = 'תודה! השאלה שלך נשלחה.';
+    setTimeout(function(){ status.style.display = 'none'; }, 3000);
+  }, 500);
+
+  return false;
+}
 </script>
