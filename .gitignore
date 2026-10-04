@@ -13,6 +13,7 @@ states.js
 shoot.js
 cmp.js
 cmp-*.png
+hitl.v*.html
 
 # Fonts directory (unless needed)
 fonts/
