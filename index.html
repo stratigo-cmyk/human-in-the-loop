@@ -202,9 +202,14 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
   .body{grid-template-columns:minmax(0,1fr)}
   .s3 .a,.s3 .b,.s3 .c{grid-row:auto}
   .log{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .foot{flex-direction:column-reverse;align-items:flex-start;gap:.6rem}
-  .app[data-state="open"] .foot p{display:none}
+  .foot{flex-direction:column;align-items:center;gap:.6rem}
+  .foot p{text-align:center;margin-inline:auto}
+  .app:not([data-state="intro"]) .foot p{display:none}
   .app[data-state="open"] .foot{padding-block:.5rem calc(.6rem + env(safe-area-inset-bottom,0px))}
+  /* Ariel logo: top right corner, first page and chapter list only */
+  .home{position:absolute;top:calc(var(--pad) * .7);right:var(--pad);z-index:5}
+  .home .logo{height:38px}
+  .app[data-state="open"] .home{display:none}
   .ctrls{inset-inline-end:-.9rem;top:-.9rem}
   .panel-head{padding-inline-end:0;padding-block-start:3.25rem}
   .modmo:not(.modmo-intro){display:none}
@@ -651,7 +656,9 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
       el.setAttribute('rx',(Math.min(r[2],r[3])*.38).toFixed(1)); el.setAttribute('opacity',r[4]); } });
   }
 
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var phoneMQ = window.matchMedia('(max-width: 899px)');
+  var reduce = { get matches(){ return reduceMQ.matches && !phoneMQ.matches; } };   // phones: the cover loop always plays
   window.HITLMotion = {
     init: function(){
       ['modmo','modmo-intro'].forEach(function(id){
