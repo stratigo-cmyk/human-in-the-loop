@@ -202,8 +202,8 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
   .body{grid-template-columns:minmax(0,1fr)}
   .s3 .a,.s3 .b,.s3 .c{grid-row:auto}
   .log{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .foot{flex-direction:column;align-items:center;gap:.6rem}
-  .foot p{text-align:center;margin-inline:auto}
+  .foot{display:block;text-align:center}
+  .foot p{max-width:none;width:100%;margin:0;text-align:center;text-wrap:balance}
   .app:not([data-state="intro"]) .foot p{display:none}
   .app[data-state="open"] .foot{padding-block:.5rem calc(.6rem + env(safe-area-inset-bottom,0px))}
   /* Ariel logo: top right corner, first page and chapter list only */
@@ -215,10 +215,11 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
   .modmo:not(.modmo-intro){display:none}
   :root{--fs-body:1.1875rem;--fs-small:1.0625rem;--fs-lead:1.375rem;--fs-title-index:clamp(1.7rem,7.7vw,2.8rem);--fs-title-panel:clamp(2.1rem,9vw,2.9rem);--fs-statement:1.875rem}
   /* intro: bigger graphic, title, loop and button; same hierarchy as desktop */
-  .intro{gap:clamp(1.25rem,3.4vh,2rem)}
+  .intro{gap:clamp(1.25rem,3.4vh,2rem);grid-template-columns:minmax(0,1fr);justify-content:stretch}
   .intro-head{gap:.6rem}
   .intro-head h1{font-size:clamp(2rem,8.4vw,2.6rem)}
-  .intro-head p{font-size:clamp(1.25rem,5.2vw,1.6rem)}
+  .intro-head{width:100%;max-width:100%}
+  .intro-head p{font-size:clamp(1.1rem,4.7vw,1.5rem);max-width:100%;text-wrap:balance;overflow-wrap:break-word}
   .cta{height:62px;min-height:62px;padding:0 2em;font-size:1.3rem}
   /* index: large tappable titles */
   .index-cap{font-size:1.125rem;margin-block-end:1rem}
@@ -703,7 +704,7 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
       var base = Math.max(150, Math.min(280, window.innerWidth * .14));
       var stageH = host.closest('.stage').getBoundingClientRect().height;
       var narrow = window.innerWidth < 900;
-      var w = narrow ? window.innerWidth * .95 : 2 * base;
+      var w = narrow ? host.closest('.stage').getBoundingClientRect().width : 2 * base;
       var maxW = (stageH * (narrow ? .5 : .44)) / .7;            // leave room for heading, loop and button
       host.style.setProperty('--iw', Math.round(Math.min(w, maxW)) + 'px');
     }
@@ -732,7 +733,7 @@ span[lang="en"],strong[lang="en"]{white-space:nowrap}
   var loop = document.getElementById('loop');
   function fit(){
     var vw = window.innerWidth;
-    var target = vw >= 900 ? vw * 0.294 : Math.min(vw * 0.9, 560);
+    var target = vw >= 900 ? vw * 0.294 : Math.min(vw * 0.88, 560);
     loop.style.setProperty('--fit', '100px');
     loop.style.width = 'max-content';
     var w = loop.getBoundingClientRect().width;
