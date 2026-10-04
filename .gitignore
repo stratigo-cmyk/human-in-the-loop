@@ -1,0 +1,22 @@
+# Build artifacts and screenshots
+*.png
+*.jpg
+*.jpeg
+
+# Development scripts and backups
+*.js
+*.bak
+*.html.bak
+build_preview.py
+preview.html
+states.js
+shoot.js
+cmp.js
+cmp-*.png
+
+# Fonts directory (unless needed)
+fonts/
+
+# OS files
+.DS_Store
+Thumbs.db
